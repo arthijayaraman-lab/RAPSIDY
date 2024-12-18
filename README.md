@@ -1,4 +1,6 @@
 # RAPSIDY - Rapid Analysis Polymer Structure and Inverse Design strategY
+![toc_v2](https://github.com/user-attachments/assets/8e40d115-90a7-4bb1-8f47-dd59dff0905a)
+
 # Installation
 1. Compile the latest version of LAMMPS (https://www.lammps.org/). We recommend using Cmake to compile. You will need to compile using the custom capped Lennard-Jones potential, which we have included in the repository. 
 2. Link your compiled version of LAMMPS with your Python environment. (https://docs.lammps.org/Python_install.html)
