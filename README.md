@@ -19,3 +19,6 @@ The helper functions provided in RAPSIDY.py contain all scripts needed to begin 
 8. After relaxing, compare the volatility-of-ratio (Vr) using the Vr_traj function.
 
 You can follow along using the example in the EXAMPLE folder. 
+
+If you use RAPSIDY in your research, please cite the following paper:
+Liao, V., Myers, T., & Jayaraman, A. (2024). A computational method for rapid analysis polymer structure and inverse design strategy (RAPSIDY). Soft Matter, 20(41), 8246-8259.
