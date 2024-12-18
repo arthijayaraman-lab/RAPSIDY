@@ -6,7 +6,7 @@
 4. RAPSIDY is now ready to run.
 
 # Usage
-The helper functions provided in RAPSIDY.py contain all scripts needed to begin using RAPSIDY.
+The helper functions provided in RAPSIDY.py contain all scripts needed to begin using RAPSIDY. 
 1. Determine a target morphology. The initial densities are provided for the following canonical morphologies: lamellar, double gyroid, hexagonally packed cylinders, body-centered cubic spheres, face-centered cubic spheres
 2. Prepare an initial LAMMPS data file with your target chain design at a specified density, box size, and bonded potentials.
 3. Generate an initial random melt by allowing the system to evolve under NVT without a non-bonded potential. This will generate the random initial melt needed prior to biasing.
@@ -14,4 +14,6 @@ The helper functions provided in RAPSIDY.py contain all scripts needed to begin 
 5. You can edit the bias_step function in RAPSIDY.py to change the non-bonded interactions used during biasing. By default, we use the capped Lennard-Jones potential. 
 6. You can follow the trajectory of the biasing via the bias_dump.lammpstrj file in your favorite software.
 7. The final biased structure is written to final.data and can be used for relaxation. For the sake of flexibility of different computing architectures, we recommend users developing their own relaxation protocol.
-8. After relaxing, compare the volatility-of-ratio (Vr) using the Vr_traj function. 
+8. After relaxing, compare the volatility-of-ratio (Vr) using the Vr_traj function.
+
+You can follow along using the example in the EXAMPLE folder. 
