@@ -4,7 +4,7 @@
 # Installation
 1. Compile the latest version of LAMMPS (https://www.lammps.org/). We recommend using Cmake to compile. You will need to compile using the custom capped Lennard-Jones potential, which we have included in the repository. 
 2. Link your compiled version of LAMMPS with your Python environment. (https://docs.lammps.org/Python_install.html)
-3. Include the path to the helper functions (RAPSIDY.py) in your PATH.
+3. Include the path to the helper functions (rapsidy_helper.py) in your PATH.
 4. RAPSIDY is now ready to run.
 
 # Usage
