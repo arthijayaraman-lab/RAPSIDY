@@ -491,3 +491,118 @@ def fcc_density(fa, grid_size):
     mesh_dim = np.array(X.shape)
     
     return phiA, phiB, mesh_dim
+
+# Create initial data file and LAMMPS files
+def initial_structure_density_3D(fa, taua, N, grid_size):
+    Ree = N**(1/2)
+    
+    dims = np.array([int(np.ceil(grid_size)), int(np.ceil(grid_size)), int(np.ceil(grid_size))])
+    
+    A = int(np.round(fa*N))
+    z = int(np.round(taua*A))
+    x = int(np.round((1-taua)*A/2))
+    y = int(np.round((1-fa)*N/2))
+
+
+    melt_density = 0.45
+    
+    V = np.prod(dims)
+    n = int(np.round((V*melt_density)/(N*4/3*np.pi*(1/2)**3))) # Number of beads
+    
+    # Linear polymer
+    num_atoms = n*N
+    num_bonds = n*(N-1)
+    outfile = 'initial_density_structure.data'
+    
+    # get lower bound of box
+    box_coords = np.array([[i, j] for i in range(int(dims[0])) for j in range(int(dims[1]))])
+    
+    # Start placing chains in boxes
+    pos_chain = []
+    for i in range(n):
+        position = np.zeros((N,3))
+        position[:, 0:2] = box_coords[i]
+        position[:, 2] = np.array([i for i in range(N)])
+        pos_chain.append(position)
+    pos_chain = np.array(pos_chain)
+    pos_chain = pos_chain.reshape(-1, 3)
+    
+    # Describe morphology
+    morphology = [1]*x + [2]*y + [1]*z + [2]*y + [1]*x
+    total_morphology = n*morphology
+    
+    # Describe bonds, remove N, 2N, 3N, etc.
+    remove_bonds = [N*i for i in range(n)]
+    bonds_1 = [i for i in range(n*N) if i not in remove_bonds]
+    bonds_2 = [i+1 for i in bonds_1]
+
+    with open(outfile, 'w') as f:
+        f.write('# LAMMPS data file written by OVITO Basic 3.8.5\n')
+        f.write('\n')
+        f.write(f'{num_atoms} atoms' +'\n')
+        f.write(f'{num_bonds} bonds' +'\n')
+        f.write('2 atom types\n')
+        f.write('1 bond types\n')
+        f.write('\n')
+        f.write(f'0 {dims[0]} xlo xhi\n')
+        f.write(f'0 {dims[1]} ylo yhi\n')
+        f.write(f'0 {dims[2]} zlo zhi\n')
+        f.write('\n')
+        f.write('Masses\n')
+        f.write('\n')
+        f.write('1 1.0\n')
+        f.write('2 1.0\n')
+        f.write('\n')
+        f.write('Atoms\n')
+        f.write('\n')
+        for i in range(1, n*N+1):
+            f.write(f'{i} {math.ceil(i/N)} {total_morphology[i-1]} 0.0 {pos_chain[i-1, 0]} {pos_chain[i-1, 1]} {pos_chain[i-1, 2]}\n')
+        f.write('\n')
+        f.write('Bonds\n')
+        f.write('\n')
+        for i in range(1, num_bonds+1):
+            f.write(f'{i} {1} {bonds_1[i-1]} {bonds_2[i-1]}\n')
+
+def get_bias_input(chiN, N):
+    # Open a file to write the LAMMPS input script
+    with open('get_bias_input.in', 'w') as f:
+        # Write initialization settings
+        f.write("# Initialize simulation\n")
+        f.write("units           lj\n")
+        f.write("dimension       3\n")
+        f.write("atom_style      full\n")
+        f.write("boundary        p p p\n")
+        f.write("\n")
+        
+        # Read data file for initialization
+        f.write("# Read data file for initialization\n")
+        f.write("read_data       initial_density_structure.data\n")
+        #f.write("special_bonds   lj 0.0 1.0 1.0\n")
+        #f.write("\n")
+        
+        # Define bond types
+        f.write("# Define bond types\n")
+        f.write("bond_style      harmonic\n")
+        f.write("bond_coeff      1 50.00 1.0\n")
+        f.write("\n")
+    
+        # # Define pair style potential
+        f.write('velocity    all create 2.0 12345')
+        f.write("\n")
+        
+        # Dump configuration
+        f.write("dump 1 all custom 100 dump_bias.lammpstrj id mol type xu yu zu\n")
+        f.write("\n")
+        
+        # Define NVT fix
+        f.write("fix nvt_state all nvt temp 1.0 1.0 $(100*dt)\n")
+        f.write("\n")
+        
+        f.write('pair_style none\n')
+        f.write('angle_style none\n')
+        f.write('dihedral_style none\n')
+
+        
+        f.write("run 100000\n")
+        
+        
