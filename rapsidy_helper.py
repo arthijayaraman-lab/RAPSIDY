@@ -370,4 +370,124 @@ def plot_3D(density, dimensions, mesh_dim):
     ax.set_ylabel('y/y$_{max}$')
     ax.set_zlabel('z/z$_{max}$')
     plt.show()
+
+# Example density functions
+def gyroid1(x, y, z, a, fa):
+    m = 2*np.pi/a # Box size
+    term1 = np.cos(m * x) * np.sin(m * y)
+    term2 = np.cos(m * y) * np.sin(m * z)
+    term3 = np.cos(m * z) * np.sin(m * x)
     
+    term4 = np.cos(2 * m * x) * np.cos(2 * m * y)
+    term5 = np.cos(2 * m * y) * np.cos(2 * m * z)
+    term6 = np.cos(2 * m * z) * np.cos(2 * m * x)
+    
+    # Combine terms to form the final expression
+    result = 10 * (term1 + term2 + term3) - 0.5 * (term4 + term5 + term6)-(1-fa)/0.067
+    
+    return result
+
+def gyroid2(x, y, z, a, fa):
+    m = 2*np.pi/a # Box size
+    term1 = np.cos(m * x) * np.sin(m * y)
+    term2 = np.cos(m * y) * np.sin(m * z)
+    term3 = np.cos(m * z) * np.sin(m * x)
+    
+    term4 = np.cos(2 * m * x) * np.cos(2 * m * y)
+    term5 = np.cos(2 * m * y) * np.cos(2 * m * z)
+    term6 = np.cos(2 * m * z) * np.cos(2 * m * x)
+    
+    # Combine terms to form the final expression
+    result = -10 * (term1 + term2 + term3) - 0.5 * (term4 + term5 + term6)-(1-fa)/0.067
+    
+    return result
+
+def gyroid_density(fa, grid_size):
+    x = np.linspace(0, 1, int(np.ceil(grid_size)))
+    y = np.linspace(0, 1, int(np.ceil(grid_size)))
+    z = np.linspace(0, 1, int(np.ceil(grid_size)))
+    X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+    a = 1
+    g1 = gyroid1(X, Y, Z, a, fa)
+    g2 = gyroid2(X, Y, Z, a, fa)
+    g1[g1>0] = 1
+    g1[g1<0] = 0
+    g2[g2>0] = 1
+    g2[g2<0] = 0
+    
+    phiA = g1+g2
+    phiA = phiA.flatten()
+    phiB = np.ones(phiA.shape)-phiA
+    phiB = phiB.flatten()
+    
+    mesh_dim = np.array([int(np.ceil(grid_size)), int(np.ceil(grid_size)), int(np.ceil(grid_size))])
+    
+    return phiA, phiB, mesh_dim
+
+def C6_density(fa, grid_size):
+    r = (fa*(3**0.5)/(2*np.pi))**0.5
+    centers = np.array([[0,0, 0], [1, 0, 0], [2, 0, 0], [1/2, 3**(0.5)/2, 0], [3/2, 3**(0.5)/2, 0], [0, 3**(0.5), 0], [1, 3**(0.5), 0], [2, 3**(0.5), 0]])
+    
+    x = np.linspace(0, 2, int(np.ceil(grid_size*2)))
+    y = np.linspace(0, 3**0.5, int(np.ceil(grid_size*3**0.5)))
+    z = np.linspace(0, 1, int(np.ceil(grid_size*2)))
+    X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+    pts = np.vstack((X.flatten(), Y.flatten(), Z.flatten())).T
+    
+    phiA = np.zeros(X.shape).flatten()
+    
+    for i in range(8):
+        phiA += (np.linalg.norm(pts[:, 0:2]-centers[i, 0:2], axis=1)<r)*1
+    phiB = np.ones(X.shape).flatten() - phiA
+    mesh_dim = np.array(X.shape)
+    
+    return phiA, phiB, mesh_dim
+
+def L_density(fa, grid_size):
+    # Use 2 periods, stack in z direction
+    x = np.linspace(0, 1, int(np.ceil(grid_size)))
+    y = np.linspace(0, 1, int(np.ceil(grid_size)))
+    z = np.linspace(0, 1, int(np.ceil(grid_size)))
+    X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+    phiA = ((Z>0) & (Z<(fa/2)) | (Z>0.5) & (Z<(0.5+fa/2)))*1
+    phiA = phiA.flatten()
+    phiB = np.ones(X.shape).flatten() - phiA
+    mesh_dim = np.array(X.shape)
+    
+    return phiA, phiB, mesh_dim
+
+def bcc_density(fa, grid_size):
+    r = (fa/(2*np.pi))**(1/3)
+    centers = np.array([[0.5, 0.5, 0.5], [0,0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 1]])
+    x = np.linspace(0, 1, int(np.ceil(grid_size)))
+    y = np.linspace(0, 1, int(np.ceil(grid_size)))
+    z = np.linspace(0, 1, int(np.ceil(grid_size)))
+    X, Y, Z = np.meshgrid(x, y, z, indexing='ij')
+    pts = np.vstack((X.flatten(), Y.flatten(), Z.flatten())).T
+    
+    phiA = np.zeros(X.shape).flatten()
+    
+    for i in range(centers.shape[0]):
+        phiA += (np.linalg.norm(pts-centers[i], axis=1)<r)*1
+    phiB = np.ones(X.shape).flatten() - phiA
+    mesh_dim = np.array(X.shape)
+    
+    return phiA, phiB, mesh_dim
+
+def fcc_density(fa, grid_size):
+    r = (3*fa/(16*np.pi))**(1/3)
+    centers = np.array([[0,0, 0], [1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 1, 0], [1, 0, 1], [0, 1, 1], [1, 1, 1], [0.5, 0.5, 0], [0.5, 0.5, 1], [0, 0.5, 0.5], [1, 0.5, 0.5], [0.5, 0, 0.5], [0.5, 1, 0.5]])
+    x = np.linspace(0, 1, int(np.ceil(grid_size)))
+    y = np.linspace(0, 1, int(np.ceil(grid_size)))
+    z = np.linspace(0, 1, int(np.ceil(grid_size)))
+    X, Y, Z = np.meshgrid(x, y, z)
+    pts = np.vstack((X.flatten(), Y.flatten(), Z.flatten())).T
+    
+    phiA = np.zeros(X.shape).flatten()
+    
+    for i in range(centers.shape[0]):
+        phiA += (np.linalg.norm(pts-centers[i], axis=1)<r)*1
+    phiB = np.ones(X.shape).flatten() - phiA
+    mesh_dim = np.array(X.shape)
+    
+    return phiA, phiB, mesh_dim
